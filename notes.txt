@@ -1,0 +1,149 @@
+
+Session 03 : 
+Sure! Let’s break down the flow and the `data()` function part in detail:
+
+---
+
+### **Flow of the Signup Process**
+
+#### 1. **Frontend User Interaction**
+   - The user opens the signup page and sees a form with fields like:
+     - **Full Name** (required)
+     - **Email** (required)
+     - **Qualification** (optional)
+     - **Date of Birth** (optional)
+     - **Password** (required)
+   - The user fills in the fields and clicks the **Submit** button.
+
+---
+
+#### 2. **Frontend Logic**
+   - The Vue.js component has a `data()` function, which defines reactive variables (state) that track what the user types into the form.
+   - When the user interacts with the form fields, Vue automatically binds the input values to these variables using the `v-model` directive. For example:
+     - When the user types in the **Full Name** field, the `full_name` variable in `data()` is updated with the entered value in real-time.
+     - Similarly, the other fields (`email`, `qualification`, `dob`, `password`) are updated.
+
+---
+
+#### 3. **Submitting the Form**
+   - When the user clicks the **Submit** button, the `submitInfo()` method is triggered via the `@click` directive.
+   - Inside `submitInfo()`:
+     1. The form data is gathered from the reactive variables (`full_name`, `email`, etc.).
+     2. An API request is sent to the `/register` backend endpoint using `fetch`. The form data is converted to JSON and sent in the request body.
+
+---
+
+#### 4. **Backend Processing**
+   - The backend receives the JSON data from the request. It:
+     1. Validates the data (e.g., checks that required fields like `email`, `password`, and `full_name` are not empty).
+     2. Parses and converts optional fields like `dob` to the correct format.
+     3. Checks for existing users with the same email to avoid duplicates.
+     4. Creates a new user in the database, ensuring that their password is securely hashed.
+     5. Returns a success or error response to the frontend.
+
+---
+
+#### 5. **Frontend Response Handling**
+   - If the backend responds with success (status 201):
+     - The frontend redirects the user to the login page.
+   - If the backend responds with an error (e.g., email already exists):
+     - The error message is displayed to the user.
+
+---
+
+### **What is the `data()` Function in Vue.js?**
+
+The `data()` function in a Vue.js component is where you define the **reactive state** of the component. It is used to store variables that the component can use and update dynamically.
+
+#### Key Points:
+1. **Reactive State**:
+   - Variables defined in `data()` are "reactive." This means when their values change, the UI updates automatically wherever those variables are used.
+   - For example:
+     ```javascript
+     data() {
+       return {
+         full_name: "",
+       };
+     }
+     ```
+     If you bind `full_name` to an input field using `v-model`:
+     ```html
+     <input v-model="full_name" />
+     ```
+     - Typing in the input box updates `full_name`.
+     - Changing `full_name` in JavaScript (e.g., `this.full_name = "John Doe";`) updates the input field.
+
+2. **Why Use `data()`?**
+   - It centralizes the state for a component.
+   - It makes the component dynamic and interactive.
+
+3. **In Our Case**:
+   - The `data()` function defines the following reactive variables:
+     ```javascript
+     data() {
+       return {
+         full_name: "",
+         email: "",
+         qualification: "",
+         dob: "",
+         password: "",
+       };
+     }
+     ```
+   - These variables hold the values entered by the user into the signup form fields.
+
+4. **Binding with `v-model`**:
+   - The `v-model` directive binds the form fields to the corresponding `data()` variables:
+     ```html
+     <input v-model="full_name" type="text" />
+     ```
+   - As the user types in the input box, the `full_name` variable is updated dynamically.
+
+---
+
+### **How Does the `submitInfo()` Method Use `data()` Variables?**
+
+The `submitInfo()` method accesses the values stored in the `data()` variables when the user clicks the **Submit** button.
+
+Here’s the key part:
+```javascript
+body: JSON.stringify({
+  full_name: this.full_name,
+  email: this.email,
+  qualification: this.qualification,
+  dob: this.dob,
+  password: this.password,
+  role: "User", // Hardcoded role
+}),
+```
+- `this.full_name`, `this.email`, etc., refer to the current values of the variables in `data()`.
+- These values are sent to the backend in the API request.
+
+---
+
+### **Flow Recap**
+1. **Frontend**:
+   - User fills in the form.
+   - `data()` variables are updated via `v-model`.
+   - `submitInfo()` sends the `data()` values to the backend.
+
+2. **Backend**:
+   - Validates and processes the data.
+   - Creates a new user and returns a success/error response.
+
+3. **Frontend Response Handling**:
+   - Success → Redirect to login.
+   - Error → Show a message to the user.
+
+Let me know if you'd like further clarification!
+
+ render_template(index.html) --> css, js(Vue init)
+
+router view is used to make SPA with routes
+ why we use router link: if we use href link way it will sent us to the backend 5000/something but we want to go the fortend /something
+
+ can you export default only one thing
+
+ for now we are disabling the csrf token 
+
+ ### before next video have to complete signup page adding other columns 
