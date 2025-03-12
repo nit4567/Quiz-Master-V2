@@ -1,15 +1,21 @@
 from flask import render_template_string,render_template,request,jsonify,Flask
-from flask_security import auth_required, current_user, roles_required
-from flask_security import SQLAlchemySessionUserDatastore
+from flask_security import auth_required, current_user, roles_required,login_user
+from flask_security import SQLAlchemyUserDatastore
 from flask_security.utils import hash_password,verify_password
 from datetime import datetime
+from models import *
 
-def create_views(app : Flask, user_datastore : SQLAlchemySessionUserDatastore, db ):
+def create_views(app : Flask, user_datastore : SQLAlchemyUserDatastore, db ):
 
     # homepage
     @app.route('/')
     def home():
         return render_template('index.html') # entry point to vue frontend
+    
+    @app.route('/get-user-id', methods=['GET'])
+    @auth_required('token')
+    def get_user_id():
+        return jsonify({"user_id": current_user.id})
     
     @app.route('/user-login', methods=['POST'])
     def user_login():
@@ -26,6 +32,7 @@ def create_views(app : Flask, user_datastore : SQLAlchemySessionUserDatastore, d
             return jsonify({'message' : 'invalid user'}), 400
         
         if verify_password(password, user.password):
+            login_user(user)
             return jsonify({'token' : user.get_auth_token(), 'user' : user.email, 'role' : user.roles[0].name}), 200
         else :
             return jsonify({'message' : 'invalid password'}), 400
@@ -91,18 +98,70 @@ def create_views(app : Flask, user_datastore : SQLAlchemySessionUserDatastore, d
             """
                 <h1> this is homepage </h1>
                 <p> Welcome, {{current_user.email}}</p>
-                <p><a href="/logout">Logout</a></p>
+                
             """
         )
     
     
+    @app.route('/api/users', methods=['GET'])
+    @auth_required('token')
+    @roles_required('admin')
+    def get_users():
+        users = User.query.all()
+
+        if not users:
+            return jsonify({"message": "No users found", "users": []})
+        
+        user_list = [
+            {
+                "id": user.id,
+                "full_name": user.full_name,
+                "email": user.email,
+                "qualification": user.qualification,
+                "dob": user.dob,
+            }
+            for user in users
+        ]
+
+        return jsonify({"users": user_list})
     
-    @app.route('/user-dashboard')
-    @roles_required('user')
-    def user_dashboard():
-        return render_template_string(
-            """
-                <h1>this is user dashboard</h1>
-                <p>This should only be accessable to user</p>
-            """
-        )
+    
+    @app.route('/api/scores', methods=['GET'])
+    @auth_required('token')
+    def get_user_scores():
+        user_id = current_user.id
+        scores = Score.query.filter_by(user_id=user_id).all()
+
+        if not scores:
+            return jsonify({"message": "No quiz given", "scores": []})
+
+        score_data = [
+            {
+                'quiz_id': score.quiz_id,
+                'timestamp': score.time_stamp_of_attempt,
+                'total_scored': score.total_scored
+            }
+            for score in scores
+        ]
+
+        return jsonify({"scores": score_data})
+    
+    @app.route('/api/chapters', methods=['GET'])
+    @auth_required('token')
+    def get_chapters():
+        chapters = Chapter.query.all()
+
+        if not chapters:
+            return jsonify({"message": "No chapters found", "chapters": []})
+
+        chapter_list = [
+                {
+                    "id": chapter.id,
+                    "name": chapter.name,
+                    "description": chapter.description,
+                    "subject_id": chapter.subject_id,
+                    "subject_name": chapter.subject.name,
+                }
+                for chapter in chapters
+            ]
+        return {"chapters": chapter_list}, 200

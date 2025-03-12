@@ -2,7 +2,7 @@ import router from "../utils/router.js";
 
 const Signup = {
   template: `
-    <div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="d-flex justify-content-center align-items-center vh-60">
       <div class="card shadow p-4">
         <h3 class="card-title text-center mb-4">Sign Up</h3>
         <div class="form-group mb-3">

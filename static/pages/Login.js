@@ -1,20 +1,21 @@
 import router from "../utils/router.js";
+import store from "../utils/store.js";
 
 const Login = {
   template: `
-    <div class="d-flex justify-content-center align-items-center vh-100">
-      <div class="card shadow p-4 border rounded-3 ">
+    <div class="d-flex justify-content-center align-items-center vh-70">
+      <div class="card shadow p-4 border rounded-3">
         <h3 class="card-title text-center mb-4">Login</h3>
+        <div v-if="errorMessage" class="alert alert-danger text-center">{{ errorMessage }}</div>
         <div class="form-group mb-3">
-          <input v-model="email" type="email" class="form-control" placeholder="Email" required/>
+          <input v-model="email" type="email" class="form-control" placeholder="Email" required />
         </div>
         <div class="form-group mb-4">
-          <input v-model="password" type="password" class="form-control" placeholder="Password" required/>
+          <input v-model="password" type="password" class="form-control" placeholder="Password" required />
         </div>
-        <button class="btn btn-primary w-100 mb-3" @click="submitInfo">Submit</button>
-        <div class="text-center">
-          <p class="mb-0">Don't have an account? <a href="#" @click="navigateToSignUp">Sign Up</a></p>
-        </div>
+        <button class="btn btn-primary w-100 mb-3" @click="submitInfo" :disabled="loading">
+          {{ loading ? "Logging in..." : "Submit" }}
+        </button>
       </div>
     </div>
   `,
@@ -22,43 +23,43 @@ const Login = {
     return {
       email: "",
       password: "",
+      loading: false,
+      errorMessage: "",
     };
   },
   methods: {
     async submitInfo() {
-      const origin = window.location.origin;
-      const url = `${origin}/user-login`;
+      this.loading = true;
+      this.errorMessage = "";
 
-      //res is promise
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: this.email, password: this.password }),
-        credentials: "same-origin", // Include credentials (cookies) with the request
-      });
+      try {
+        const response = await fetch("/user-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: this.email, password: this.password }),
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        console.log(data);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Login failed.");
+        }
+
+        const data = await response.json();
+
+        // ✅ Store token in localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.role);
+
+        // ✅ Also update Vuex for reactivity (if still needed)
+        store.commit("setAuth", { token: data.token, role: data.role });
 
         // Redirect based on user role
-        if (data.role === "admin") {
-          router.push("/admin-dashboard");
-        } else if (data.role === "user") {
-          router.push("/user-dashboard");
-        } else {
-          console.error("Unknown role:", data.role);
-        }
-      } else {
-        const errorData = await res.json();
-        console.error("Login failed:", errorData);
-        // Handle login error
+        router.push(data.role === "admin" ? "/admin-dashboard" : "/user-dashboard");
+      } catch (error) {
+        this.errorMessage = error.message;
+      } finally {
+        this.loading = false;
       }
-    },
-    navigateToSignUp() {
-      router.push("/signup"); // Redirect to Sign Up page
     },
   },
 };

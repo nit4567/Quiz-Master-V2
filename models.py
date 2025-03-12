@@ -18,6 +18,7 @@ class User(db.Model, UserMixin):
     dob = db.Column(db.Date, nullable=True)
 
     # Flask-Security specific fields
+    # datastore automatically creates these fields
     fs_uniquifier = db.Column(db.String, nullable=False, unique=True)
     active = db.Column(db.Boolean, default=True)
 
@@ -65,6 +66,7 @@ class Question(db.Model):
     __tablename__ = 'question'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    title = db.Column(db.String(20), nullable=False)
     question_statement = db.Column(db.Text, nullable=False)
     option1 = db.Column(db.String(128), nullable=False)
     option2 = db.Column(db.String(128), nullable=False)
@@ -79,4 +81,9 @@ class Score(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     time_stamp_of_attempt = db.Column(db.DateTime, nullable=False)
     total_scored = db.Column(db.Float, nullable=False)
+    total_questions = db.Column(db.Integer, nullable=False)
+    correct_answers = db.Column(db.Integer, nullable=False)
+    incorrect_answers = db.Column(db.Integer, nullable=False)
+    time_taken = db.Column(db.Float, nullable=False)
+
 
