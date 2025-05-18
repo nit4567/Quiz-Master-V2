@@ -36,7 +36,7 @@ Follow these steps to set up the project locally.
 ### 1. 🔧 Clone the Repository
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/nit4567/Quiz-Master-V2.git
 cd quiz-master
 ```
 
